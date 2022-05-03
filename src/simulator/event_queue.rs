@@ -27,6 +27,10 @@ impl EventQueue {
             future: BTreeMap::new()
         }
     }
+
+    /*
+     * Schedule an event at time t
+     */
     fn schedule_event(&mut self, e: Event, t: u32) {
         if self.time == t {
             self.inactive.push_front(e);
@@ -43,21 +47,29 @@ impl EventQueue {
         }); 
     }
 
+    /*
+     * Activate any inactive events
+     */
     fn activate_inactive(&mut self) {
         let q = std::mem::replace(&mut self.inactive, VecDeque::new());
         self.inactive = q; 
     }
 
+    /*
+     * Activate the next set of events from future
+     */
     fn activate_future(&mut self) {
         if let Some((t, _)) = self.future.iter().next() {
             self.time = *t;
-        } else { return; }
-        println!("map: {:?}", self.future);
+        } else { return; } 
         let mut r = self.future.remove(&self.time).unwrap();
         let q = std::mem::replace(&mut r, VecDeque::new());
         self.active = q; 
     }
 
+    /**
+     * Pop the next event, activating events and changing simulation time as necessary
+     */
     fn pop_event(&mut self) -> Option<(Event, u32)> {
         if self.active.is_empty() {
             if self.inactive.is_empty() {
